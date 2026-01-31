@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
-import { Send, Briefcase, Heart, Cpu, Mic, Volume2, MicOff, VolumeX } from 'lucide-react'
+import { useState, useRef, useEffect, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
+import { Send, Briefcase, Heart, Cpu, Mic, Volume2, MicOff, VolumeX, HandCoins } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 type Message = {
@@ -39,6 +40,16 @@ const PERSONAS = [
     systemPrompt: "You are a startup founder. You move fast. You care about impact, ownership, and hustle. You don't care about processes. You want to know if the candidate can ship. Keep responses concise and energetic.",
     voicePitch: 1.0,
     voiceRate: 1.25
+  },
+  {
+    id: 'negotiator',
+    name: 'Tough Negotiator',
+    description: 'Firm on budget. Needs convincing.',
+    icon: HandCoins,
+    color: 'text-green-600',
+    systemPrompt: "You are a Hiring Manager negotiating a salary. You have a budget but really want the candidate. You start by saying the offer is competitive. If the candidate makes good points about market rate or value, concede slightly. Be firm but professional. Keep responses concise.",
+    voicePitch: 0.9,
+    voiceRate: 1.0
   }
 ]
 
@@ -57,8 +68,18 @@ interface SpeechRecognitionErrorEvent {
   error: string
 }
 
-export default function InterviewPage() {
+function InterviewContent() {
+  const searchParams = useSearchParams()
+  const initialPersonaId = searchParams.get('persona')
   const [selectedPersona, setSelectedPersona] = useState(PERSONAS[0])
+
+  useEffect(() => {
+    if (initialPersonaId) {
+        const found = PERSONAS.find(p => p.id === initialPersonaId)
+        if (found) setSelectedPersona(found)
+    }
+  }, [initialPersonaId])
+
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -171,7 +192,7 @@ export default function InterviewPage() {
   }
 
   const startInterview = () => {
-    const greeting = `Hello. I'm the ${selectedPersona.name}. Let's get started. Tell me about yourself.`
+    const greeting = `Hello. I'm the ${selectedPersona.name}. Let's get started.`
     setMessages([{ role: 'assistant', content: greeting }])
     speakText(greeting)
   }
@@ -292,5 +313,13 @@ export default function InterviewPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function InterviewPage() {
+  return (
+    <Suspense fallback={<div>Loading interview...</div>}>
+      <InterviewContent />
+    </Suspense>
   )
 }

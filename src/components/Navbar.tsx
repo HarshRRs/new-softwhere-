@@ -27,6 +27,9 @@ export default async function Navbar() {
              <Link href="/interview" className="transition-colors hover:text-foreground/80 text-foreground/60">
               Interview Coach
             </Link>
+            <Link href="/negotiate" className="transition-colors hover:text-foreground/80 text-foreground/60">
+              Negotiate
+            </Link>
           </nav>
         </div>
         <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
