@@ -1,6 +1,7 @@
 import ApplicationHeatmap from '@/components/dashboard/ApplicationHeatmap'
 import CompanyInsider from '@/components/dashboard/CompanyInsider'
 import JobList from '@/components/dashboard/JobList'
+import KanbanBoard from '@/components/dashboard/KanbanBoard'
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
@@ -32,15 +33,21 @@ export default async function DashboardPage() {
         </Link>
       </div>
 
+      {/* Main Stats Row */}
       <div className="grid md:grid-cols-3 gap-8">
-        <div className="md:col-span-2 space-y-8">
+        <div className="md:col-span-2">
            <ApplicationHeatmap />
-           <JobList />
         </div>
         <div className="md:col-span-1">
            <CompanyInsider />
         </div>
       </div>
+
+      {/* Application Tracker */}
+      <KanbanBoard />
+
+      {/* Job Feed */}
+      <JobList />
     </div>
   )
 }
