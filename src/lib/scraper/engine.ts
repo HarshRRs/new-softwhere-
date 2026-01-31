@@ -1,4 +1,4 @@
-// import { chromium } from 'playwright'
+import Parser from 'rss-parser'
 
 export interface ScrapedJob {
   title: string
@@ -7,57 +7,95 @@ export interface ScrapedJob {
   salary: string
   url: string
   description: string
+  source: string
+  date: string
 }
 
-export async function scrapeJobs(keyword: string = 'software engineer'): Promise<ScrapedJob[]> {
-  // Using a mock implementation for now to avoid blocking on external sites or bot detection during MVP dev.
-  // In production, this would use the real Playwright browser.
+const parser = new Parser()
 
-  /*
-  const browser = await chromium.launch({ headless: true })
-  const page = await browser.newPage()
-  await page.goto(`https://remoteok.com/remote-${keyword}-jobs`)
-  // ... scraping logic ...
-  await browser.close()
-  */
+export async function scrapeJobs(keyword: string = 'software'): Promise<ScrapedJob[]> {
+  const jobs: ScrapedJob[] = []
 
-  // Mock Data Return
-  console.log(`Scraping for ${keyword}...`)
+  // 1. Fetch from RemoteOK API
+  try {
+    console.log(`Fetching RemoteOK jobs for ${keyword}...`)
+    // RemoteOK API is just a JSON endpoint
+    const response = await fetch('https://remoteok.com/api', { next: { revalidate: 3600 } })
+    if (response.ok) {
+        const data = await response.json()
+        // First element is legal text, skip it
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const listings = data.slice(1).filter((job: any) =>
+            job.position?.toLowerCase().includes(keyword.toLowerCase()) ||
+            job.tags?.some((tag: string) => tag.toLowerCase().includes(keyword.toLowerCase()))
+        ).slice(0, 10) // Limit to 10 for speed
 
-  await new Promise(resolve => setTimeout(resolve, 2000)) // Simulate network delay
-
-  return [
-    {
-      title: 'Senior Frontend Engineer',
-      company: 'TechCorp',
-      location: 'Remote',
-      salary: '$120k - $160k',
-      url: 'https://example.com/job/1',
-      description: 'We are looking for a React expert...'
-    },
-    {
-      title: 'Full Stack Developer',
-      company: 'StartupX',
-      location: 'San Francisco (Hybrid)',
-      salary: '$100k - $140k',
-      url: 'https://example.com/job/2',
-      description: 'Join our fast paced team...'
-    },
-    {
-      title: 'AI Engineer',
-      company: 'Bloom AI',
-      location: 'Remote',
-      salary: '$150k+',
-      url: 'https://bloom-career.ai',
-      description: 'Build the future of career automation.'
-    },
-    {
-        title: 'Product Manager',
-        company: 'InnovateInc',
-        location: 'New York',
-        salary: '$130k - $170k',
-        url: 'https://example.com/job/3',
-        description: 'Lead our product vision...'
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        listings.forEach((job: any) => {
+            jobs.push({
+                title: job.position,
+                company: job.company,
+                location: job.location || 'Remote',
+                salary: job.salary || 'Not disclosed',
+                url: job.apply_url || job.url,
+                description: job.description, // HTML content
+                source: 'RemoteOK',
+                date: job.date
+            })
+        })
     }
-  ]
+  } catch (e) {
+      console.error("RemoteOK fetch failed", e)
+  }
+
+  // 2. Fetch from WeWorkRemotely RSS
+  try {
+      console.log(`Fetching WWR jobs...`)
+      // Note: WWR RSS returns ALL jobs, filtering locally
+      const feed = await parser.parseURL('https://weworkremotely.com/remote-jobs.rss')
+
+      const listings = feed.items.filter(item =>
+        item.title?.toLowerCase().includes(keyword.toLowerCase()) ||
+        item.contentSnippet?.toLowerCase().includes(keyword.toLowerCase())
+      ).slice(0, 10)
+
+      listings.forEach(item => {
+          // Title format is often "Company: Position" or "Position: Company"
+          const parts = item.title?.split(':') || []
+          const company = parts.length > 1 ? parts[0].trim() : 'Unknown'
+          const title = parts.length > 1 ? parts.slice(1).join(':').trim() : item.title || 'Unknown'
+
+          jobs.push({
+              title: title,
+              company: company,
+              location: 'Remote',
+              salary: 'Not disclosed',
+              url: item.link || '',
+              description: item.contentSnippet || '',
+              source: 'WeWorkRemotely',
+              date: item.pubDate || new Date().toISOString()
+          })
+      })
+
+  } catch (e) {
+      console.error("WWR fetch failed", e)
+  }
+
+  // Fallback Mock Data if everything fails
+  if (jobs.length === 0) {
+      return [
+        {
+          title: 'Senior React Developer (Mock)',
+          company: 'Fallback Inc',
+          location: 'Remote',
+          salary: '$140k',
+          url: '#',
+          description: 'The APIs failed, so here is a mock job.',
+          source: 'System',
+          date: new Date().toISOString()
+        }
+      ]
+  }
+
+  return jobs.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 }

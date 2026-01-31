@@ -21,6 +21,7 @@
     "playwright": "^1.58.1",
     "react": "19.2.3",
     "react-dom": "19.2.3",
+    "rss-parser": "^3.13.0",
     "stripe": "^20.3.0",
     "tailwind-merge": "^3.4.0"
   },
