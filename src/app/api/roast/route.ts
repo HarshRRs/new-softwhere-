@@ -14,10 +14,14 @@ export async function POST(req: Request) {
     }
 
     if (!groq) {
-      // Fallback mock response for development without API key
-      await new Promise((resolve) => setTimeout(resolve, 2000)) // Simulate delay
+      // Fallback mock response
+      await new Promise((resolve) => setTimeout(resolve, 2000))
       return NextResponse.json({
-        roast: "Oh, look at this. Another 'passionate self-starter'. Your resume is so generic I almost fell asleep reading the header. 'Proficient in Word'? Wow, stop the presses, we have a genius here. The only thing this resume successfully demonstrates is your ability to use a template. 2/10, would recycle."
+        roast: "Oh, look at this. Another 'passionate self-starter'. Your resume is so generic I almost fell asleep reading the header.",
+        score: 2,
+        cliches: ["Passionate", "Self-Starter", "Team Player", "Synergy"],
+        oneLiner: "I'd hire you to water my plastic plants.",
+        animal: "Sloth"
       })
     }
 
@@ -25,19 +29,21 @@ export async function POST(req: Request) {
       messages: [
         {
           role: "system",
-          content: "You are a brutally honest, sarcastic, and funny career coach. Your job is to 'roast' the user's resume. Be harsh but funny. Make fun of cliches, buzzwords, and vague descriptions. Keep it under 200 words. Do not be helpful, just be a roaster. End with a score out of 10."
+          content: "You are a brutally honest, sarcastic career coach. Analyze the resume and return a JSON object with: 1. 'roast' (string, max 50 words, savage). 2. 'score' (number 1-10, be harsh). 3. 'cliches' (array of 3-5 detected buzzwords). 4. 'oneLiner' (string, a short viral insult). 5. 'animal' (string, a spirit animal that matches their laziness/incompetence, e.g., 'Confused Sloth'). Return ONLY JSON."
         },
         {
           role: "user",
-          content: `Here is my resume content: \n\n${resumeText}`
+          content: `Resume: ${resumeText}`
         }
       ],
       model: "llama-3.3-70b-versatile",
+      response_format: { type: "json_object" }
     })
 
-    const roast = completion.choices[0]?.message?.content || "I'm speechless. Literally. Try again."
+    const content = completion.choices[0]?.message?.content
+    const data = content ? JSON.parse(content) : {}
 
-    return NextResponse.json({ roast })
+    return NextResponse.json(data)
 
   } catch (error) {
     console.error('Roast error:', error)

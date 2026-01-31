@@ -1,5 +1,6 @@
 import ApplicationHeatmap from '@/components/dashboard/ApplicationHeatmap'
 import CompanyInsider from '@/components/dashboard/CompanyInsider'
+import JobList from '@/components/dashboard/JobList'
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
@@ -32,17 +33,13 @@ export default async function DashboardPage() {
       </div>
 
       <div className="grid md:grid-cols-3 gap-8">
-        <div className="md:col-span-2">
+        <div className="md:col-span-2 space-y-8">
            <ApplicationHeatmap />
+           <JobList />
         </div>
         <div className="md:col-span-1">
            <CompanyInsider />
         </div>
-      </div>
-
-      {/* Placeholder for Job List */}
-      <div className="bg-white rounded-xl border shadow-sm p-6 min-h-[300px] flex items-center justify-center text-gray-400">
-        <p>Auto-Applied Jobs list will appear here in the next update.</p>
       </div>
     </div>
   )
