@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import Groq from 'groq-sdk'
+import { createClient } from '@/utils/supabase/server'
 
 const groq = process.env.GROQ_API_KEY
   ? new Groq({ apiKey: process.env.GROQ_API_KEY })
@@ -7,10 +8,23 @@ const groq = process.env.GROQ_API_KEY
 
 export async function POST(req: Request) {
   try {
-    const { resumeText } = await req.json()
+    let { resumeText } = await req.json()
+
+    // If no text provided, try to fetch from profile
+    if (!resumeText) {
+       const supabase = await createClient()
+       const { data: { user } } = await supabase.auth.getUser()
+
+       if (user) {
+         const { data } = await supabase.from('profiles').select('resume_text').eq('id', user.id).single()
+         if (data?.resume_text) {
+            resumeText = data.resume_text
+         }
+       }
+    }
 
     if (!resumeText) {
-      return NextResponse.json({ error: 'Resume text is required' }, { status: 400 })
+      return NextResponse.json({ error: 'Resume text is required. Please paste it or upload a resume in your profile.' }, { status: 400 })
     }
 
     if (!groq) {
