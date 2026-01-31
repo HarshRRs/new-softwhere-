@@ -1,12 +1,24 @@
 import ApplicationHeatmap from '@/components/dashboard/ApplicationHeatmap'
 import CompanyInsider from '@/components/dashboard/CompanyInsider'
+import { createClient } from '@/utils/supabase/server'
+import { redirect } from 'next/navigation'
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return redirect('/login')
+  }
+
   return (
     <div className="container mx-auto max-w-7xl px-4 py-8 space-y-8">
       <div>
         <h1 className="text-3xl font-bold">Mission Control</h1>
-        <p className="text-gray-500">Track your progress and get inside intel.</p>
+        <p className="text-gray-500">Welcome back, {user.email}</p>
       </div>
 
       <div className="grid md:grid-cols-3 gap-8">

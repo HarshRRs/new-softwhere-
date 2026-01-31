@@ -1,7 +1,12 @@
 import Link from 'next/link'
 import { Sparkles } from 'lucide-react'
+import AuthButton from '@/components/auth/AuthButton'
+import { createClient } from '@/utils/supabase/server'
 
-export default function Navbar() {
+export default async function Navbar() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
   return (
     <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-14 items-center max-w-7xl mx-auto px-4">
@@ -25,11 +30,7 @@ export default function Navbar() {
           </nav>
         </div>
         <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
-           <Link href="/builder">
-              <button className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 bg-black text-white hover:bg-gray-800">
-                Get Started
-              </button>
-           </Link>
+           <AuthButton user={user} />
         </div>
       </div>
     </nav>
