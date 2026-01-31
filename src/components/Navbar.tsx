@@ -30,6 +30,9 @@ export default async function Navbar() {
             <Link href="/negotiate" className="transition-colors hover:text-foreground/80 text-foreground/60">
               Negotiate
             </Link>
+            <Link href="/linkedin" className="transition-colors hover:text-foreground/80 text-foreground/60">
+              LinkedIn
+            </Link>
           </nav>
         </div>
         <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
