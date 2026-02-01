@@ -50,17 +50,28 @@ export default function RoastPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ resumeText }),
       })
+
+      if (!response.ok) {
+        throw new Error(`Server returned ${response.status} ${response.statusText}`)
+      }
+
       const result = await response.json()
+
+      // Validate result structure to prevent client-side crashes
+      if (!result || typeof result.score !== 'number' || !Array.isArray(result.cliches)) {
+         throw new Error("Invalid response format from server")
+      }
+
       setData(result)
     } catch (error) {
       console.error('Failed to roast:', error)
       // Fallback
       setData({
-        roast: "System Overload. Your resume was too powerful (or generic).",
+        roast: "System Overload. Your resume broke our AI (probably the formatting). Try pasting the text directly.",
         score: 1,
-        cliches: ["Error", "Try Again"],
-        oneLiner: "Even my error logs are more interesting.",
-        animal: "Buggy Code"
+        cliches: ["Error 500", "Chaos", "Entropy"],
+        oneLiner: "Your resume is so complex it caused a singularity.",
+        animal: "Broken Robot"
       })
     } finally {
       setLoading(false)

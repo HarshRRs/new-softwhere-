@@ -1,25 +1,10 @@
 
-> bloom@0.1.0 dev
-> next dev
+> bloom@0.1.0 start
+> next start
 
-▲ Next.js 16.1.6 (Turbopack)
+▲ Next.js 16.1.6
 - Local:         http://localhost:3000
 - Network:       http://192.168.0.2:3000
-- Environments: .env.local
 
 ✓ Starting...
-⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
-✓ Ready in 1385ms
- GET /pricing 200 in 2.5s (compile: 1872ms, proxy.ts: 140ms, render: 488ms)
- GET /pricing 200 in 137ms (compile: 8ms, proxy.ts: 11ms, render: 118ms)
-SyntaxError: Unexpected end of JSON input
-    at JSON.parse (<anonymous>)
-    at POST (src/app/api/checkout/route.ts:11:32)
-   9 | export async function POST(req: Request) {
-  10 |   try {
-> 11 |     const { tier } = await req.json()
-     |                                ^
-  12 |     const headersList = await headers()
-  13 |     const origin = headersList.get('origin')
-  14 |
-[?25h
+✓ Ready in 843ms

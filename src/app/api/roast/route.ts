@@ -55,12 +55,22 @@ export async function POST(req: Request) {
     })
 
     const content = completion.choices[0]?.message?.content
-    const data = content ? JSON.parse(content) : {}
+
+    let data;
+    try {
+        data = content ? JSON.parse(content) : {}
+    } catch (parseError) {
+        console.error("JSON Parse Error. Raw content:", content)
+        throw new Error("Failed to parse model response")
+    }
 
     return NextResponse.json(data)
 
-  } catch (error) {
-    console.error('Roast error:', error)
-    return NextResponse.json({ error: 'Failed to roast' }, { status: 500 })
+  } catch (error: any) {
+    console.error('Roast API Error:', error.message || error)
+    return NextResponse.json(
+        { error: error.message || 'Failed to roast' },
+        { status: 500 }
+    )
   }
 }
