@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 import RoastCard from '@/components/RoastCard'
 import html2canvas from 'html2canvas'
 import { extractTextFromPdf } from '@/utils/pdf-helper'
+import { ERROR_ROASTS } from '@/lib/roast-data'
 
 interface RoastData {
   roast: string
@@ -65,14 +66,9 @@ export default function RoastPage() {
       setData(result)
     } catch (error) {
       console.error('Failed to roast:', error)
-      // Fallback for network errors only (server now handles API errors)
-      setData({
-        roast: "Our roasting servers are currently on fire (literally). Please check your internet connection or try again in a moment.",
-        score: 0,
-        cliches: ["Network Error", "WiFi Issues", "Server Meltdown"],
-        oneLiner: "Even the internet is trying to save you from this roast.",
-        animal: "Dead Server Hamster"
-      })
+      // Pick a random error roast from the library
+      const fallback = ERROR_ROASTS[Math.floor(Math.random() * ERROR_ROASTS.length)]
+      setData(fallback)
     } finally {
       setLoading(false)
     }
