@@ -1,61 +1,62 @@
 'use client'
 
-import { Check, X } from 'lucide-react'
+import { Check, X, Zap } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useState } from 'react'
 
 const TIERS = [
   {
-    name: 'Basic',
-    price: '€29',
-    period: '/month',
-    description: 'For casual job seekers.',
+    name: 'Starter',
+    price: 'Free',
+    period: 'forever',
+    description: 'Get your resume ready for war.',
     features: [
-      'Resume Generator',
-      'Cover Letter Generator',
-      '50 Applications / mo',
-      'Basic Tracking'
+      'Viral Resume Roaster',
+      'AI Resume Builder',
+      'Smart Profile Parsing',
+      'LinkedIn Content Generator'
     ],
     notIncluded: [
-      'Auto-Apply Engine',
-      'Interview Coach',
-      'Salary Negotiation AI',
-      'LinkedIn Autopilot'
+      'Backdoor Auto-Apply Engine',
+      'Interview Copilot (Cheat Mode)',
+      'Salary Negotiation Coach',
+      'Unlimited Job Tracking'
     ],
-    cta: 'Get Started',
+    cta: 'Start Free',
     popular: false
   },
   {
     name: 'Pro',
-    price: '€79',
+    price: '€49',
     period: '/month',
-    description: 'For serious candidates who want results fast.',
+    description: 'Bypass the application queue completely.',
     features: [
-      'Everything in Basic',
-      'Auto-Apply to 100 jobs/day',
-      'Interview Prep AI',
+      'Everything in Starter',
+      'Backdoor Auto-Apply (Cold DMs)',
+      'Interview Copilot (Real-time)',
       'Salary Negotiation Coach',
-      'LinkedIn Autopilot'
+      'Unlimited Cover Letter AI'
     ],
     notIncluded: [],
-    cta: 'Upgrade to Pro',
-    popular: true
+    cta: 'Get Unfair Advantage',
+    popular: true,
+    highlight: 'Killer Deal'
   },
   {
-    name: 'Success-Based',
-    price: '€0',
-    period: ' upfront',
-    description: 'We only get paid when you get hired.',
+    name: 'Concierge',
+    price: '€499',
+    period: '/month',
+    description: 'We do it all for you. Sit back.',
     features: [
       'Everything in Pro',
-      'Priority Support',
-      'Personal Success Manager',
-      'Pay 10% of 1st year salary LATER'
+      'Human Expert Review',
+      'Manual Application Service',
+      '1-on-1 Interview Coaching',
+      'Success Guarantee'
     ],
     notIncluded: [],
-    cta: 'Apply for Program',
-    popular: false,
-    highlight: 'Risk Free'
+    cta: 'Hire Us to Apply',
+    popular: false
   }
 ]
 
@@ -86,9 +87,9 @@ export default function PricingPage() {
   return (
     <div className="container mx-auto max-w-7xl px-4 py-16">
       <div className="text-center mb-16 space-y-4">
-        <h1 className="text-4xl md:text-5xl font-bold">Invest in Your Future</h1>
+        <h1 className="text-4xl md:text-6xl font-bold">Destroy the Competition.</h1>
         <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-          Choose the plan that fits your ambition. From automated applications to full-service career management.
+          Stop applying like everyone else. Start using &quot;Cheat Mode&quot; for your career.
         </p>
       </div>
 
@@ -102,13 +103,8 @@ export default function PricingPage() {
             )}
           >
             {tier.popular && (
-              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-purple-600 text-white px-4 py-1 rounded-full text-sm font-bold uppercase tracking-wide">
-                Most Popular
-              </div>
-            )}
-            {tier.highlight && (
-               <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-green-600 text-white px-4 py-1 rounded-full text-sm font-bold uppercase tracking-wide">
-                {tier.highlight}
+              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-purple-600 text-white px-4 py-1 rounded-full text-sm font-bold uppercase tracking-wide flex items-center gap-1">
+                <Zap className="w-4 h-4" fill="currentColor" /> Most Popular
               </div>
             )}
 
@@ -125,7 +121,7 @@ export default function PricingPage() {
               {tier.features.map((feature) => (
                 <li key={feature} className="flex items-start gap-3 text-sm">
                   <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
-                  <span>{feature}</span>
+                  <span className="font-medium">{feature}</span>
                 </li>
               ))}
               {tier.notIncluded.map((feature) => (
@@ -142,7 +138,7 @@ export default function PricingPage() {
               className={cn(
                 "w-full py-3 rounded-lg font-bold transition-colors",
                 tier.popular
-                  ? "bg-purple-600 text-white hover:bg-purple-700"
+                  ? "bg-purple-600 text-white hover:bg-purple-700 shadow-lg hover:shadow-xl"
                   : "bg-gray-900 text-white hover:bg-gray-800",
                 loading === tier.name && "opacity-75 cursor-wait"
               )}
