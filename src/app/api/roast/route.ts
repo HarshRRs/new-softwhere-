@@ -1,10 +1,15 @@
 import { NextResponse } from 'next/server'
 import Groq from 'groq-sdk'
 import { createClient } from '@/utils/supabase/server'
+import { PERSONAS, FALLBACK_ROASTS } from '@/lib/roast-data'
 
 const groq = process.env.GROQ_API_KEY
   ? new Groq({ apiKey: process.env.GROQ_API_KEY })
   : null
+
+function getRandomItem<T>(array: T[]): T {
+  return array[Math.floor(Math.random() * array.length)]
+}
 
 export async function POST(req: Request) {
   try {
@@ -27,50 +32,56 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Resume text is required. Please paste it or upload a resume in your profile.' }, { status: 400 })
     }
 
+    // 1. Check for API Key
     if (!groq) {
-      // Fallback mock response
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-      return NextResponse.json({
-        roast: "Oh, look at this. Another 'passionate self-starter'. Your resume is so generic I almost fell asleep reading the header.",
-        score: 2,
-        cliches: ["Passionate", "Self-Starter", "Team Player", "Synergy"],
-        oneLiner: "I'd hire you to water my plastic plants.",
-        animal: "Sloth"
-      })
+      console.warn("GROQ_API_KEY is missing. Using fallback.")
+      await new Promise((resolve) => setTimeout(resolve, 1500)) // Simulate delay
+      return NextResponse.json(getRandomItem(FALLBACK_ROASTS))
     }
 
-    const completion = await groq.chat.completions.create({
-      messages: [
-        {
-          role: "system",
-          content: "You are a brutally honest, sarcastic career coach. Analyze the resume and return a JSON object with: 1. 'roast' (string, max 50 words, savage). 2. 'score' (number 1-10, be harsh). 3. 'cliches' (array of 3-5 detected buzzwords). 4. 'oneLiner' (string, a short viral insult). 5. 'animal' (string, a spirit animal that matches their laziness/incompetence, e.g., 'Confused Sloth'). Return ONLY JSON."
-        },
-        {
-          role: "user",
-          content: `Resume: ${resumeText}`
-        }
-      ],
-      model: "llama-3.3-70b-versatile",
-      response_format: { type: "json_object" }
-    })
+    // 2. Select a Random Persona
+    const persona = getRandomItem(PERSONAS)
+    console.log(`Using Persona: ${persona.id}`)
 
-    const content = completion.choices[0]?.message?.content
-
-    let data;
     try {
-        data = content ? JSON.parse(content) : {}
-    } catch (parseError) {
-        console.error("JSON Parse Error. Raw content:", content)
-        throw new Error("Failed to parse model response")
-    }
+        const completion = await groq.chat.completions.create({
+        messages: [
+            {
+            role: "system",
+            content: `${persona.content} Return a JSON object with: 1. 'roast' (string, max 50 words, savage). 2. 'score' (number 1-10, be harsh). 3. 'cliches' (array of 3-5 detected buzzwords). 4. 'oneLiner' (string, a short viral insult). 5. 'animal' (string, a spirit animal that matches their laziness/incompetence). Return ONLY JSON.`
+            },
+            {
+            role: "user",
+            content: `Resume: ${resumeText}`
+            }
+        ],
+        model: "llama-3.3-70b-versatile",
+        temperature: 0.8, // Increase variety
+        response_format: { type: "json_object" }
+        })
 
-    return NextResponse.json(data)
+        const content = completion.choices[0]?.message?.content
+
+        let data;
+        try {
+            data = content ? JSON.parse(content) : {}
+        } catch (parseError) {
+            console.error("JSON Parse Error. Raw content:", content)
+            throw new Error("Failed to parse model response")
+        }
+
+        // Add persona ID to response for debugging/display if needed
+        return NextResponse.json({ ...data, persona: persona.id })
+
+    } catch (groqError: any) {
+        console.error("Groq API Failed:", groqError)
+        // Fallback to random roast on API failure
+        return NextResponse.json(getRandomItem(FALLBACK_ROASTS))
+    }
 
   } catch (error: any) {
-    console.error('Roast API Error:', error.message || error)
-    return NextResponse.json(
-        { error: error.message || 'Failed to roast' },
-        { status: 500 }
-    )
+    console.error('Roast API Critical Error:', error.message || error)
+    // Absolute final fallback
+    return NextResponse.json(getRandomItem(FALLBACK_ROASTS))
   }
 }
