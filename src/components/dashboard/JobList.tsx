@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Briefcase, MapPin, DollarSign, ExternalLink, Loader2, Sparkles, X, Copy, Check } from 'lucide-react'
+import { Briefcase, MapPin, DollarSign, ExternalLink, Loader2, Sparkles, X, Copy, Check, UserPlus, Mail } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 interface Job {
@@ -21,9 +21,9 @@ export default function JobList() {
   const [loading, setLoading] = useState(false)
   const [keyword, setKeyword] = useState('')
 
-  // Cover Letter State
+  // Cover Letter & Networking State
   const [generatingId, setGeneratingId] = useState<number | null>(null)
-  const [coverLetter, setCoverLetter] = useState<{jobIndex: number, text: string} | null>(null)
+  const [modalContent, setModalContent] = useState<{type: 'letter' | 'network', text: string} | null>(null)
   const [copied, setCopied] = useState(false)
 
   const fetchJobs = async () => {
@@ -54,11 +54,12 @@ export default function JobList() {
         body: JSON.stringify({
             jobTitle: job.title,
             company: job.company,
-            description: job.description
+            description: job.description,
+            jobUrl: job.url
         }),
       })
       const data = await response.json()
-      setCoverLetter({ jobIndex: index, text: data.letter })
+      setModalContent({ type: 'letter', text: data.letter })
     } catch (e) {
       console.error(e)
     } finally {
@@ -66,9 +67,39 @@ export default function JobList() {
     }
   }
 
+  const findHiringManager = async (job: Job) => {
+    // Mock functionality for MVP
+    setModalContent({
+        type: 'network',
+        text: `Loading hiring manager data for ${job.company}...`
+    })
+
+    await new Promise(resolve => setTimeout(resolve, 1500))
+
+    const mockManager = "Sarah Jenkins"
+    const mockRole = "Head of Engineering"
+    const script = `Subject: Quick question about the ${job.title} role
+
+Hi ${mockManager},
+
+I saw you're leading the team at ${job.company}. I've been following your work on [Specific Project] and love the direction.
+
+I'm applying for the ${job.title} role, but I know how noisy these inboxes get. I specifically have deep experience in [Your Key Skill] that seems critical for this role.
+
+Would you be open to a 5-minute chat? No pressure if you're swamped.
+
+Best,
+[Your Name]`
+
+    setModalContent({
+        type: 'network',
+        text: `🎯 Hiring Manager Found!\n\nName: ${mockManager}\nRole: ${mockRole}\nLikely Email: sarah.j@${job.company.toLowerCase().replace(/\s/g, '')}.com\n\n---\n\n${script}`
+    })
+  }
+
   const copyToClipboard = () => {
-    if (coverLetter) {
-        navigator.clipboard.writeText(coverLetter.text)
+    if (modalContent) {
+        navigator.clipboard.writeText(modalContent.text)
         setCopied(true)
         setTimeout(() => setCopied(false), 2000)
     }
@@ -122,17 +153,26 @@ export default function JobList() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 self-start md:self-center">
-                 <button
-                    onClick={() => generateCoverLetter(job, i)}
-                    disabled={generatingId === i}
-                    className="bg-purple-100 text-purple-700 px-4 py-2 rounded-lg text-sm font-bold hover:bg-purple-200 transition-colors whitespace-nowrap flex items-center gap-2"
-                 >
-                   {generatingId === i ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                   Generate Cover Letter
-                 </button>
-                 <a href={job.url} target="_blank" rel="noopener noreferrer" className="p-2 text-gray-400 hover:text-gray-600">
-                   <ExternalLink className="w-5 h-5" />
+              <div className="flex flex-col gap-2 md:items-end">
+                 <div className="flex gap-2">
+                    <button
+                        onClick={() => generateCoverLetter(job, i)}
+                        disabled={generatingId === i}
+                        className="bg-purple-100 text-purple-700 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-purple-200 transition-colors flex items-center gap-1"
+                    >
+                    {generatingId === i ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                    Cover Letter
+                    </button>
+                    <button
+                        onClick={() => findHiringManager(job)}
+                        className="bg-blue-100 text-blue-700 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-blue-200 transition-colors flex items-center gap-1"
+                    >
+                    <UserPlus className="w-3 h-3" />
+                    Find Hiring Mgr
+                    </button>
+                 </div>
+                 <a href={job.url} target="_blank" rel="noopener noreferrer" className="text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1 justify-end">
+                   View Original <ExternalLink className="w-3 h-3" />
                  </a>
               </div>
             </div>
@@ -140,9 +180,9 @@ export default function JobList() {
         </div>
       )}
 
-      {/* Cover Letter Modal Overlay */}
+      {/* Modal Overlay */}
       <AnimatePresence>
-        {coverLetter && (
+        {modalContent && (
             <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -155,19 +195,22 @@ export default function JobList() {
                     exit={{ scale: 0.9, y: 20 }}
                     className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col"
                 >
-                    <div className="flex justify-between items-center p-6 border-b">
-                        <h3 className="font-bold text-xl">AI Cover Letter</h3>
-                        <button onClick={() => setCoverLetter(null)} className="text-gray-500 hover:text-gray-700">
+                    <div className={`flex justify-between items-center p-6 border-b ${modalContent.type === 'network' ? 'bg-blue-50' : ''}`}>
+                        <h3 className="font-bold text-xl flex items-center gap-2">
+                            {modalContent.type === 'network' ? <UserPlus className="text-blue-600" /> : <Mail className="text-purple-600" />}
+                            {modalContent.type === 'network' ? 'Backdoor Access' : 'AI Cover Letter'}
+                        </h3>
+                        <button onClick={() => setModalContent(null)} className="text-gray-500 hover:text-gray-700">
                             <X className="w-6 h-6" />
                         </button>
                     </div>
 
                     <div className="p-6 overflow-y-auto flex-1 bg-gray-50 font-mono text-sm whitespace-pre-wrap">
-                        {coverLetter.text}
+                        {modalContent.text}
                     </div>
 
                     <div className="p-6 border-t flex justify-end gap-2">
-                        <button onClick={() => setCoverLetter(null)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">
+                        <button onClick={() => setModalContent(null)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">
                             Close
                         </button>
                         <button
