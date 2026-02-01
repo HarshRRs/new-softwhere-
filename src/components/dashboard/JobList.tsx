@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Briefcase, MapPin, DollarSign, ExternalLink, Loader2, Sparkles, X, Copy, Check, UserPlus, Mail } from 'lucide-react'
+import { Briefcase, MapPin, DollarSign, ExternalLink, Loader2, Sparkles, X, Copy, Check, UserPlus, Mail, Search } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 interface Job {
@@ -21,9 +21,8 @@ export default function JobList() {
   const [loading, setLoading] = useState(false)
   const [keyword, setKeyword] = useState('')
 
-  // Cover Letter & Networking State
   const [generatingId, setGeneratingId] = useState<number | null>(null)
-  const [modalContent, setModalContent] = useState<{type: 'letter' | 'network', text: string} | null>(null)
+  const [modalContent, setModalContent] = useState<{type: 'letter' | 'network', text: string, link?: string} | null>(null)
   const [copied, setCopied] = useState(false)
 
   const fetchJobs = async () => {
@@ -68,21 +67,15 @@ export default function JobList() {
   }
 
   const findHiringManager = async (job: Job) => {
-    // Mock functionality for MVP
-    setModalContent({
-        type: 'network',
-        text: `Loading hiring manager data for ${job.company}...`
-    })
+    // Generate Smart Search Link
+    const query = encodeURIComponent(`Hiring Manager ${job.company} ${job.title}`)
+    const searchUrl = `https://www.linkedin.com/search/results/people/?keywords=${query}`
 
-    await new Promise(resolve => setTimeout(resolve, 1500))
-
-    const mockManager = "Sarah Jenkins"
-    const mockRole = "Head of Engineering"
     const script = `Subject: Quick question about the ${job.title} role
 
-Hi ${mockManager},
+Hi [Name],
 
-I saw you're leading the team at ${job.company}. I've been following your work on [Specific Project] and love the direction.
+I saw you're leading the team at ${job.company}. I've been following your work and love the direction.
 
 I'm applying for the ${job.title} role, but I know how noisy these inboxes get. I specifically have deep experience in [Your Key Skill] that seems critical for this role.
 
@@ -93,13 +86,19 @@ Best,
 
     setModalContent({
         type: 'network',
-        text: `🎯 Hiring Manager Found!\n\nName: ${mockManager}\nRole: ${mockRole}\nLikely Email: sarah.j@${job.company.toLowerCase().replace(/\s/g, '')}.com\n\n---\n\n${script}`
+        text: `1. Click the button below to find the hiring manager on LinkedIn.\n2. Connect with them.\n3. Send this script:`,
+        link: searchUrl
     })
+
+    // Append script for copy functionality
+    setModalContent(prev => prev ? ({ ...prev, text: prev.text + "\n\n---\n\n" + script }) : null)
   }
 
   const copyToClipboard = () => {
     if (modalContent) {
-        navigator.clipboard.writeText(modalContent.text)
+        // Extract just the script part if it's networking
+        const contentToCopy = modalContent.type === 'network' ? modalContent.text.split('---')[1].trim() : modalContent.text
+        navigator.clipboard.writeText(contentToCopy)
         setCopied(true)
         setTimeout(() => setCopied(false), 2000)
     }
@@ -168,7 +167,7 @@ Best,
                         className="bg-blue-100 text-blue-700 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-blue-200 transition-colors flex items-center gap-1"
                     >
                     <UserPlus className="w-3 h-3" />
-                    Find Hiring Mgr
+                    Backdoor
                     </button>
                  </div>
                  <a href={job.url} target="_blank" rel="noopener noreferrer" className="text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1 justify-end">
@@ -206,6 +205,16 @@ Best,
                     </div>
 
                     <div className="p-6 overflow-y-auto flex-1 bg-gray-50 font-mono text-sm whitespace-pre-wrap">
+                        {modalContent.type === 'network' && modalContent.link && (
+                            <a
+                                href={modalContent.link}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="block w-full bg-[#0077b5] text-white text-center py-3 rounded-lg font-bold mb-6 hover:bg-[#006097] flex items-center justify-center gap-2"
+                            >
+                                <Search className="w-4 h-4" /> Find Manager on LinkedIn
+                            </a>
+                        )}
                         {modalContent.text}
                     </div>
 
@@ -218,7 +227,7 @@ Best,
                             className="bg-black text-white px-6 py-2 rounded-lg font-bold hover:bg-gray-800 flex items-center gap-2 transition-all"
                         >
                             {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                            {copied ? 'Copied!' : 'Copy to Clipboard'}
+                            {copied ? 'Copied!' : 'Copy Script'}
                         </button>
                     </div>
                 </motion.div>

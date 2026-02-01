@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
+// Import standard node modules for pdfjs-dist usage in Node environment
+import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs'
 
 export async function POST(req: Request) {
   try {
@@ -10,31 +12,21 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 })
     }
 
-    // Mock PDF Parsing
-    // In a real production env, we would use a robust service or library like 'pdf-parse' or AWS Textract.
-    // Due to build-time dependency resolution issues with the current 'pdf-parse' version in Next.js Edge/Node runtime,
-    // we are simulating the text extraction for this MVP.
+    const buffer = Buffer.from(await file.arrayBuffer())
 
-    console.log(`Received file: ${file.name}, size: ${file.size}`)
+    // Parse PDF using pdfjs-dist
+    const data = new Uint8Array(buffer)
+    const loadingTask = pdfjsLib.getDocument(data)
+    const doc = await loadingTask.promise
 
-    // Simulate processing time
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    // Mock extracted text based on filename or just generic text
-    const text = `
-      [Parsed Content from ${file.name}]
-
-      EXPERIENCE
-      Senior Software Engineer | TechCorp | 2020 - Present
-      - Led a team of 5 developers.
-      - Built scalable microservices.
-
-      Junior Developer | StartupX | 2018 - 2020
-      - Developed frontend using React.
-
-      SKILLS
-      TypeScript, Next.js, Node.js, Python, SQL
-    `
+    let text = ''
+    for (let i = 1; i <= doc.numPages; i++) {
+        const page = await doc.getPage(i)
+        const content = await page.getTextContent()
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const strings = content.items.map((item: any) => item.str)
+        text += strings.join(' ') + '\n'
+    }
 
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
