@@ -1,7 +1,7 @@
 'use client'
 
 import { forwardRef } from 'react'
-import { Sparkles } from 'lucide-react'
+import { Sparkles, Skull, AlertTriangle, Fingerprint } from 'lucide-react'
 
 interface RoastCardProps {
   score: number
@@ -14,74 +14,113 @@ interface RoastCardProps {
 
 const RoastCard = forwardRef<HTMLDivElement, RoastCardProps>(({ score, cliches, oneLiner, animal }, ref) => {
 
-  const getGradient = (score: number) => {
-    if (score < 4) return "from-red-900 via-red-800 to-black"
-    if (score < 7) return "from-orange-800 via-orange-900 to-black"
-    return "from-green-900 via-emerald-900 to-black"
+  // Determine card style based on score
+  const getTheme = (score: number) => {
+    if (score <= 3) return {
+      bg: "bg-[#1a1a1a]",
+      accent: "text-red-500",
+      border: "border-red-500/50",
+      stamp: "border-red-600 text-red-600",
+      label: "UNEMPLOYABLE"
+    }
+    if (score <= 6) return {
+      bg: "bg-[#1a1a1a]",
+      accent: "text-orange-500",
+      border: "border-orange-500/50",
+      stamp: "border-orange-600 text-orange-600",
+      label: "MID CARD"
+    }
+    return {
+      bg: "bg-[#1a1a1a]",
+      accent: "text-green-500",
+      border: "border-green-500/50",
+      stamp: "border-green-600 text-green-600",
+      label: "SURVIVOR"
+    }
   }
+
+  const theme = getTheme(score)
 
   return (
     <div
       ref={ref}
-      className={`relative w-full max-w-md aspect-[4/5] bg-gradient-to-br ${getGradient(score)} text-white p-8 rounded-3xl shadow-2xl flex flex-col justify-between overflow-hidden border-4 border-white/10`}
+      className={`relative w-full max-w-md aspect-[3/4] ${theme.bg} text-white p-6 shadow-2xl flex flex-col justify-between overflow-hidden font-mono border-8 ${theme.border}`}
     >
-      {/* Background Noise/Texture */}
-      <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noise%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noise)%22 opacity=%220.5%22/%3E%3C/svg%3E")' }}></div>
+      {/* Paper Texture Overlay */}
+      <div className="absolute inset-0 opacity-10 pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/cardboard-flat.png')]"></div>
 
-      {/* Header */}
-      <div className="relative z-10 flex justify-between items-start">
-        <div className="flex items-center gap-2">
-          <Sparkles className="w-6 h-6 text-yellow-400" />
-          <span className="font-bold tracking-wider text-sm opacity-80">BLOOM AI ROAST</span>
+      {/* "WANTED" Header Style */}
+      <div className="relative z-10 text-center border-b-4 border-white pb-4 mb-4">
+        <div className="flex justify-between items-center mb-2 px-2">
+            <span className="text-xs text-gray-400">CASE #2024-{Math.floor(Math.random() * 9999)}</span>
+            <span className="text-xs text-gray-400">BLOOM AI DEPT.</span>
         </div>
-        <div className="bg-white/10 backdrop-blur-md px-3 py-1 rounded-full text-xs font-mono">
-          {new Date().toLocaleDateString()}
+        <h1 className={`text-5xl font-black tracking-tighter ${theme.accent} uppercase`} style={{ textShadow: '2px 2px 0px rgba(0,0,0,1)' }}>
+          {theme.label}
+        </h1>
+      </div>
+
+      {/* Main Stats / Mugshot Area */}
+      <div className="relative z-10 flex-1 flex flex-col gap-4">
+
+        {/* The One Liner (Quote) */}
+        <div className="bg-white/5 border border-white/10 p-4 relative">
+             <span className="absolute -top-3 -left-2 text-4xl text-white/20">"</span>
+             <p className="text-xl font-bold text-center leading-tight uppercase italic font-serif">
+               {oneLiner}
+             </p>
+             <span className="absolute -bottom-6 -right-2 text-4xl text-white/20">"</span>
+        </div>
+
+        {/* Info Grid */}
+        <div className="grid grid-cols-2 gap-4 mt-4">
+            <div className="border-2 border-dashed border-white/20 p-3 flex flex-col items-center justify-center">
+                <span className="text-xs uppercase text-gray-500 mb-1">Spirit Animal</span>
+                <span className={`font-bold text-lg ${theme.accent}`}>{animal}</span>
+            </div>
+            <div className="border-2 border-dashed border-white/20 p-3 flex flex-col items-center justify-center">
+                 <span className="text-xs uppercase text-gray-500 mb-1">Toxicity Level</span>
+                 <div className="flex gap-1">
+                    {[...Array(5)].map((_, i) => (
+                        <Skull key={i} className={`w-4 h-4 ${i < (10 - score) / 2 ? 'text-red-500' : 'text-gray-700'}`} />
+                    ))}
+                 </div>
+            </div>
+        </div>
+
+        {/* Cliches List */}
+        <div className="mt-2">
+            <p className="text-xs uppercase bg-white text-black inline-block px-1 font-bold mb-2">Evidence Found:</p>
+            <ul className="text-sm space-y-1 text-gray-300">
+                {cliches.slice(0, 3).map((c, i) => (
+                    <li key={i} className="flex items-center gap-2">
+                        <AlertTriangle className="w-3 h-3 text-yellow-500" />
+                        {c}
+                    </li>
+                ))}
+            </ul>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="relative z-10 space-y-6 text-center">
-        <div>
-          <h2 className="text-6xl font-black mb-2 flex justify-center items-center gap-2" style={{ textShadow: '0 4px 0 rgba(0,0,0,0.5)' }}>
-            {score}/10
-          </h2>
-          <p className="text-xl font-medium opacity-90 uppercase tracking-widest">Employability Score</p>
-        </div>
+      {/* Footer / Stamp */}
+      <div className="relative z-10 mt-6 flex justify-between items-end border-t-4 border-white pt-4">
+         <div className="flex flex-col">
+             <span className="text-[10px] text-gray-500">GENERATED BY</span>
+             <span className="font-bold text-lg tracking-widest">BLOOM.AI</span>
+         </div>
 
-        <div className="bg-black/30 backdrop-blur-sm p-4 rounded-xl border border-white/10 transform -rotate-1">
-          <p className="font-serif italic text-lg leading-relaxed">
-            &quot;{oneLiner}&quot;
-          </p>
-        </div>
+         {/* Stamped Score */}
+         <div className={`border-4 ${theme.stamp} p-2 rounded rotate-[-12deg] opacity-90 mask-image-grunge`}>
+             <span className={`text-4xl font-black ${theme.stamp}`}>
+                 {score}/10
+             </span>
+         </div>
 
-        <div className="grid grid-cols-2 gap-4 text-left">
-           <div className="bg-white/5 p-3 rounded-lg">
-             <span className="text-xs uppercase text-gray-400 block mb-1">Spirit Animal</span>
-             <span className="font-bold text-lg">{animal}</span>
-           </div>
-           <div className="bg-white/5 p-3 rounded-lg">
-             <span className="text-xs uppercase text-gray-400 block mb-1">Cliche Count</span>
-             <span className="font-bold text-lg text-red-400">{cliches.length} Detected</span>
-           </div>
-        </div>
+         <div className="opacity-30">
+             <Fingerprint className="w-12 h-12" />
+         </div>
       </div>
 
-      {/* Footer / Cliches */}
-      <div className="relative z-10 mt-4">
-        <p className="text-xs uppercase text-gray-500 mb-2">Detected Cliches:</p>
-        <div className="flex flex-wrap gap-2">
-          {cliches.map((c, i) => (
-            <span key={i} className="bg-red-500/20 text-red-200 border border-red-500/30 px-2 py-1 rounded text-xs font-mono">
-              {c}
-            </span>
-          ))}
-        </div>
-      </div>
-
-      {/* Watermark */}
-      <div className="absolute bottom-4 right-4 text-white/10 text-xs font-bold rotate-90 origin-bottom-right">
-        bloom-career.ai
-      </div>
     </div>
   )
 })
