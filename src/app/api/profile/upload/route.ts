@@ -12,11 +12,18 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 })
     }
 
+    console.log(`Processing file: ${file.name}, size: ${file.size}`)
+
     const buffer = Buffer.from(await file.arrayBuffer())
 
     // Parse PDF using pdfjs-dist
-    const data = new Uint8Array(buffer)
-    const loadingTask = pdfjsLib.getDocument(data)
+    // We need to disable the worker for serverless environments to avoid "worker not found" errors
+    const loadingTask = pdfjsLib.getDocument({
+        data: new Uint8Array(buffer),
+        useSystemFonts: true,
+        disableFontFace: true,
+    })
+
     const doc = await loadingTask.promise
 
     let text = ''
@@ -28,21 +35,34 @@ export async function POST(req: Request) {
         text += strings.join(' ') + '\n'
     }
 
+    console.log(`Extracted ${text.length} characters.`)
+
     const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+    if (authError) {
+        console.error("Auth Error:", authError)
+        // We continue even if auth fails, just to return the text to the UI
+    }
 
     if (user) {
-        await supabase.from('profiles').update({
+        const { error: dbError } = await supabase.from('profiles').update({
             resume_text: text,
             updated_at: new Date().toISOString()
         }).eq('id', user.id)
+
+        if (dbError) {
+            console.error("DB Update Error:", dbError)
+        } else {
+            console.log("Profile updated successfully.")
+        }
     }
 
     // Return the text so the frontend can use it immediately (for Roaster/Builder)
     return NextResponse.json({ success: true, textLength: text.length, text })
 
   } catch (error) {
-    console.error(error)
-    return NextResponse.json({ error: 'Failed to parse' }, { status: 500 })
+    console.error("PDF Parsing Error:", error)
+    return NextResponse.json({ error: 'Failed to parse PDF. Check server logs.' }, { status: 500 })
   }
 }
