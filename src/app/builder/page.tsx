@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Sparkles, Download, Plus, Trash2 } from 'lucide-react'
+import { Sparkles, Download, Plus, Trash2, Upload, Loader2 } from 'lucide-react'
+import { extractTextFromPdf } from '@/utils/pdf-helper'
 
 export default function BuilderPage() {
   const [personalInfo, setPersonalInfo] = useState({
@@ -17,6 +18,30 @@ export default function BuilderPage() {
   ])
 
   const [loading, setLoading] = useState(false)
+  const [importing, setImporting] = useState(false)
+
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setImporting(true)
+    try {
+        const text = await extractTextFromPdf(file)
+
+        // Very basic parsing heuristic for MVP
+        // In production, we'd use an LLM to structure this text into JSON
+        setPersonalInfo(prev => ({
+            ...prev,
+            summary: text.substring(0, 500) + "..."
+        }))
+
+        alert("Resume imported! We've extracted the text into the summary. Use 'AI Enhance' to structure it.")
+    } catch (error) {
+        console.error("Import failed", error)
+    } finally {
+        setImporting(false)
+    }
+  }
 
   const handleEnhance = async (index: number) => {
     const item = experience[index]
@@ -59,6 +84,31 @@ export default function BuilderPage() {
     <div className="container mx-auto max-w-5xl px-4 py-8 grid md:grid-cols-2 gap-8 h-[calc(100vh-4rem)]">
       {/* Editor Column */}
       <div className="overflow-y-auto pr-4 space-y-8 pb-20">
+
+        {/* Import Header */}
+        <div className="flex justify-between items-center bg-purple-50 p-4 rounded-lg border border-purple-100">
+            <div>
+                <h3 className="font-bold text-purple-900">Start from PDF</h3>
+                <p className="text-xs text-purple-700">Import your existing resume</p>
+            </div>
+            <div>
+                <input
+                   type="file"
+                   accept=".pdf"
+                   onChange={handleImport}
+                   className="hidden"
+                   id="builder-upload"
+                 />
+                 <label
+                    htmlFor="builder-upload"
+                    className="cursor-pointer bg-white text-purple-700 px-4 py-2 rounded-md text-sm font-bold border border-purple-200 hover:bg-purple-100 flex items-center gap-2"
+                 >
+                    {importing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                    Import
+                 </label>
+            </div>
+        </div>
+
         <div className="space-y-4">
           <h2 className="text-xl font-bold border-b pb-2">Personal Details</h2>
           <div className="grid grid-cols-2 gap-4">

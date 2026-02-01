@@ -12,10 +12,11 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* Force light mode preference for this MVP to ensure "White Theme" consistency */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #ffffff; /* Override dark mode to white */
+    --foreground: #171717;
   }
 }
 

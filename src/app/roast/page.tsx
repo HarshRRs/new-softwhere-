@@ -2,10 +2,11 @@
 
 import { useState, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { Flame, Loader2, Download, Share2 } from 'lucide-react'
+import { Flame, Loader2, Download, Share2, Upload } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import RoastCard from '@/components/RoastCard'
 import html2canvas from 'html2canvas'
+import { extractTextFromPdf } from '@/utils/pdf-helper'
 
 interface RoastData {
   roast: string
@@ -19,7 +20,24 @@ export default function RoastPage() {
   const [resumeText, setResumeText] = useState('')
   const [data, setData] = useState<RoastData | null>(null)
   const [loading, setLoading] = useState(false)
+  const [parsing, setParsing] = useState(false)
   const cardRef = useRef<HTMLDivElement>(null)
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setParsing(true)
+    try {
+        const text = await extractTextFromPdf(file)
+        setResumeText(text)
+    } catch (error) {
+        console.error("Parsing failed", error)
+        alert("Failed to read PDF. Please paste text manually.")
+    } finally {
+        setParsing(false)
+    }
+  }
 
   const handleRoast = async () => {
     if (!resumeText) return
@@ -74,7 +92,7 @@ export default function RoastPage() {
           <Flame className="w-12 h-12 text-orange-500 animate-pulse" />
         </h1>
         <p className="text-xl text-gray-600">
-          Prepare to be humbled. AI will brutally analyze your resume.
+          Upload your resume. Get brutally honest feedback. Cry (optional).
         </p>
       </div>
 
@@ -82,11 +100,43 @@ export default function RoastPage() {
         {/* Input Section */}
         <div className="space-y-4">
           <div className="bg-white p-6 rounded-xl border shadow-sm">
-            <label className="block text-sm font-medium mb-2 text-gray-700">
-              Paste your resume content here
-            </label>
+            <div className="mb-4">
+                <input
+                   type="file"
+                   accept=".pdf"
+                   onChange={handleFileUpload}
+                   className="hidden"
+                   id="roast-upload"
+                 />
+                 <label
+                    htmlFor="roast-upload"
+                    className={cn(
+                        "cursor-pointer block w-full border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:bg-gray-50 transition-colors",
+                        parsing && "opacity-50 cursor-wait"
+                    )}
+                 >
+                    {parsing ? (
+                        <Loader2 className="w-8 h-8 text-purple-600 animate-spin mx-auto mb-2" />
+                    ) : (
+                        <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                    )}
+                    <p className="text-sm font-medium text-gray-700">
+                      {parsing ? "Scanning Resume..." : "Upload PDF Resume"}
+                    </p>
+                 </label>
+            </div>
+
+            <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-white px-2 text-muted-foreground">Or paste text</span>
+                </div>
+            </div>
+
             <textarea
-              className="w-full h-96 p-4 rounded-lg border border-gray-300 focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none font-mono text-sm"
+              className="w-full h-64 p-4 rounded-lg border border-gray-300 focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none font-mono text-sm mt-4"
               placeholder="Jane Doe, Software Engineer..."
               value={resumeText}
               onChange={(e) => setResumeText(e.target.value)}

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Mic, MicOff, BrainCircuit, Activity, AlertTriangle, Lightbulb } from 'lucide-react'
+import { Mic, MicOff, BrainCircuit, Activity, AlertTriangle, Lightbulb, Sun, Moon } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
@@ -40,6 +40,7 @@ export default function CopilotPage() {
   const [transcript, setTranscript] = useState('')
   const [suggestions, setSuggestions] = useState<string[]>([])
   const [activeKeyword, setActiveKeyword] = useState<string | null>(null)
+  const [darkMode, setDarkMode] = useState(false) // Default to Light Mode per request
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const recognitionRef = useRef<any>(null)
@@ -63,7 +64,6 @@ export default function CopilotPage() {
         const text = interimTranscript.toLowerCase()
         setTranscript(text)
 
-        // Inline analysis to avoid dependency loop in useEffect
         for (const [key, answers] of Object.entries(CHEAT_SHEET)) {
             if (text.includes(key)) {
                 setActiveKeyword(key)
@@ -93,30 +93,45 @@ export default function CopilotPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-green-500 font-mono p-4 flex flex-col overflow-hidden">
+    <div className={cn(
+        "min-h-screen font-mono p-4 flex flex-col overflow-hidden transition-colors duration-300",
+        darkMode ? "bg-black text-green-500" : "bg-white text-gray-900"
+    )}>
       {/* Header */}
-      <div className="flex justify-between items-center border-b border-green-900 pb-4 mb-4">
+      <div className={cn("flex justify-between items-center border-b pb-4 mb-4", darkMode ? "border-green-900" : "border-gray-200")}>
         <div className="flex items-center gap-2">
-          <BrainCircuit className="w-6 h-6 animate-pulse" />
+          <BrainCircuit className={cn("w-6 h-6 animate-pulse", darkMode ? "text-green-500" : "text-purple-600")} />
           <h1 className="text-xl font-bold tracking-widest">INTERVIEW COPILOT_v1</h1>
         </div>
-        <button
-          onClick={toggleListening}
-          className={cn(
-            "p-3 rounded-full border border-green-500/50 transition-all hover:bg-green-900/30",
-            isListening ? "animate-pulse bg-red-900/50 border-red-500 text-red-500" : ""
-          )}
-        >
-          {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
-        </button>
+        <div className="flex items-center gap-2">
+            <button
+                onClick={() => setDarkMode(!darkMode)}
+                className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            >
+                {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
+            <button
+            onClick={toggleListening}
+            className={cn(
+                "p-3 rounded-full border transition-all",
+                isListening
+                    ? "bg-red-500 text-white border-red-600 animate-pulse shadow-lg"
+                    : darkMode
+                        ? "border-green-500/50 hover:bg-green-900/30"
+                        : "border-gray-300 hover:bg-gray-100"
+            )}
+            >
+            {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+            </button>
+        </div>
       </div>
 
       {/* Live Audio Viz (Fake) */}
-      <div className="h-12 flex items-center justify-center gap-1 mb-4 opacity-50">
+      <div className={cn("h-12 flex items-center justify-center gap-1 mb-4 opacity-50", darkMode ? "text-green-500" : "text-purple-500")}>
         {[...Array(20)].map((_, i) => (
           <motion.div
             key={i}
-            className="w-1 bg-green-500"
+            className={cn("w-1", darkMode ? "bg-green-500" : "bg-purple-500")}
             animate={{ height: isListening ? [5, 20, 5] : 2 }}
             transition={{ repeat: Infinity, duration: 0.5, delay: i * 0.05 }}
           />
@@ -134,7 +149,7 @@ export default function CopilotPage() {
               exit={{ opacity: 0, scale: 0.9 }}
               className="w-full max-w-lg space-y-6"
             >
-              <div className="flex items-center justify-center gap-2 text-yellow-400 mb-4">
+              <div className={cn("flex items-center justify-center gap-2 mb-4", darkMode ? "text-yellow-400" : "text-amber-600")}>
                 <AlertTriangle className="w-5 h-5" />
                 <span className="uppercase text-sm tracking-widest">Detected: {activeKeyword}</span>
               </div>
@@ -145,15 +160,20 @@ export default function CopilotPage() {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.1 }}
-                  className="bg-green-900/20 border border-green-500/30 p-4 rounded-lg text-lg text-white font-sans text-left shadow-[0_0_15px_rgba(0,255,0,0.1)]"
+                  className={cn(
+                      "p-4 rounded-lg text-lg font-sans text-left shadow-lg",
+                      darkMode
+                        ? "bg-green-900/20 border border-green-500/30 text-white shadow-[0_0_15px_rgba(0,255,0,0.1)]"
+                        : "bg-white border border-gray-200 text-gray-800"
+                  )}
                 >
-                  <Lightbulb className="w-4 h-4 text-yellow-400 inline mr-2" />
+                  <Lightbulb className={cn("w-4 h-4 inline mr-2", darkMode ? "text-yellow-400" : "text-amber-500")} />
                   {suggestion}
                 </motion.div>
               ))}
             </motion.div>
           ) : (
-            <div className="text-green-800 flex flex-col items-center">
+            <div className={cn("flex flex-col items-center", darkMode ? "text-green-800" : "text-gray-400")}>
               <Activity className="w-16 h-16 mb-4 opacity-20" />
               <p>Listening for interview questions...</p>
               <p className="text-xs mt-2">Try saying &quot;What is your biggest weakness?&quot;</p>
@@ -163,8 +183,8 @@ export default function CopilotPage() {
       </div>
 
       {/* Transcript Feed (Subtitles) */}
-      <div className="h-24 border-t border-green-900 pt-4 mt-4 text-sm text-green-700 overflow-hidden relative">
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent pointer-events-none"></div>
+      <div className={cn("h-24 border-t pt-4 mt-4 text-sm overflow-hidden relative", darkMode ? "border-green-900 text-green-700" : "border-gray-200 text-gray-500")}>
+        <div className={cn("absolute inset-0 bg-gradient-to-t via-transparent to-transparent pointer-events-none", darkMode ? "from-black" : "from-white")}></div>
         <p className="whitespace-pre-wrap break-words opacity-70">
           {transcript || "> System Ready. Waiting for audio input..."}
         </p>

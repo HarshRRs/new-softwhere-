@@ -20,7 +20,7 @@ export default function Home() {
             Bloom is your AI career ally. Auto-apply to jobs, get brutally honest resume feedback, and practice interviews with real personas.
           </p>
           <div className="space-x-4">
-            <Link href="/builder">
+            <Link href="/login">
                <button className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-lg font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-black text-white hover:bg-gray-800 h-11 px-8 py-2">
                 Get Started
                 <ArrowRight className="ml-2 h-4 w-4" />

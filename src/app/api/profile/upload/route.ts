@@ -38,7 +38,8 @@ export async function POST(req: Request) {
         }).eq('id', user.id)
     }
 
-    return NextResponse.json({ success: true, textLength: text.length })
+    // Return the text so the frontend can use it immediately (for Roaster/Builder)
+    return NextResponse.json({ success: true, textLength: text.length, text })
 
   } catch (error) {
     console.error(error)
