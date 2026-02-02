@@ -46,6 +46,12 @@ const RoastCard = forwardRef<HTMLDivElement, RoastCardProps>(({ score, cliches, 
       ref={ref}
       className={`relative w-full max-w-md aspect-[3/4] ${theme.bg} text-white p-6 shadow-2xl flex flex-col justify-between overflow-hidden font-mono border-8 ${theme.border}`}
     >
+      {/* Background Image - User Provided */}
+      <div
+        className="absolute inset-0 pointer-events-none bg-cover bg-center opacity-20 mix-blend-overlay"
+        style={{ backgroundImage: "url('/money-bg.png')" }}
+      ></div>
+
       {/* Paper Texture Overlay */}
       <div className="absolute inset-0 opacity-10 pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/cardboard-flat.png')]"></div>
 
